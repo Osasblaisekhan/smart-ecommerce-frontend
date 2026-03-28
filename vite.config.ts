@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
     port: 5174,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://smart-ecommerce-backend-six.vercel.app',
         changeOrigin: true,
       },
     },
