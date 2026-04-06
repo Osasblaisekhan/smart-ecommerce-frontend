@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -97,7 +98,7 @@ const OrdersPage: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <p className="font-bold text-[#333333]">CFA{(order.totalPrice / 100).toFixed(0)}</p>
+                          <p className="font-bold text-[#333333]">{formatPrice(order.totalPrice)}</p>
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 ${config.bg} ${config.color} text-xs font-semibold rounded-full capitalize`}>
                             {order.orderStatus}
                           </span>

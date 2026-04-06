@@ -26,7 +26,7 @@ const CategoryGrid: React.FC = () => {
     const fetch = async () => {
       try {
         const res = await api.getCategories();
-        if (res.success && res.data && res.data.length > 0) {
+        if (res.success && res.data) {
           setCategories(
             res.data.map((c: string) => ({
               id: c,
@@ -35,23 +35,11 @@ const CategoryGrid: React.FC = () => {
               image_url: null,
             }))
           );
-        } else {
-          setCategories(defaultCategories);
         }
-      } catch {
-        setCategories(defaultCategories);
-      }
+      } catch {}
     };
     fetch();
   }, []);
-
-  const defaultCategories = [
-    { id: 'Smart Lighting', title: 'Smart Lighting', handle: 'smart-lighting', image_url: null },
-    { id: 'Security Cameras', title: 'Security Cameras', handle: 'security-cameras', image_url: null },
-    { id: 'Climate Control', title: 'Climate Control', handle: 'climate-control', image_url: null },
-    { id: 'Entertainment', title: 'Entertainment', handle: 'entertainment', image_url: null },
-    { id: 'Sensors & Safety', title: 'Sensors & Safety', handle: 'sensors-safety', image_url: null },
-  ];
 
   return (
     <section className="py-16 lg:py-24 bg-white">

@@ -19,16 +19,6 @@ const Header: React.FC = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Handle auth navigation events
-  useEffect(() => {
-    const handleNavigate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      navigate(customEvent.detail);
-    };
-    window.addEventListener('auth-navigate' as any, handleNavigate);
-    return () => window.removeEventListener('auth-navigate' as any, handleNavigate);
-  }, [navigate]);
-
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -159,7 +149,7 @@ const Header: React.FC = () => {
                           <img src={p.images?.[0]} alt={p.name} className="w-10 h-10 rounded-lg object-cover" />
                           <div>
                             <p className="text-sm font-medium text-[#333333]">{p.name}</p>
-                            <p className="text-xs text-[#8BC34A] font-semibold">CFA{(p.price / 100).toFixed(0)}</p>
+                            <p className="text-xs text-[#8BC34A] font-semibold">${(p.price / 100).toFixed(2)}</p>
                           </div>
                         </Link>
                       ))}
@@ -201,17 +191,15 @@ const Header: React.FC = () => {
               )}
             </div>
 
-            {/* Cart - only show when logged in */}
-            {user && (
-              <Link to="/cart" className="relative p-2 text-[#666666] hover:text-[#8BC34A] transition-colors">
-                <ShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#8BC34A] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {cartCount > 99 ? '99+' : cartCount}
-                  </span>
-                )}
-              </Link>
-            )}
+            {/* Cart */}
+            <Link to="/cart" className="relative p-2 text-[#666666] hover:text-[#8BC34A] transition-colors">
+              <ShoppingCart className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#8BC34A] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </Link>
 
             {/* Mobile menu toggle */}
             <button

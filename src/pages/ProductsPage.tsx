@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -20,7 +21,7 @@ const ProductsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [sort, setSort] = useState('created-desc');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200000]);
   const [selectedType, setSelectedType] = useState('');
   const [productTypes, setProductTypes] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -29,11 +30,14 @@ const ProductsPage: React.FC = () => {
     const fetch = async () => {
       try {
         const res = await api.getProducts({ limit: '200' });
+        console.log('API Response:', res);
         const prods = res.data || [];
         setProducts(prods);
         const types = [...new Set(prods.map((p: any) => p.category).filter(Boolean))] as string[];
         setProductTypes(types);
-      } catch {}
+      } catch (err) {
+        console.error('Fetch error:', err);
+      }
       setLoading(false);
     };
     fetch();
@@ -151,7 +155,7 @@ const ProductsPage: React.FC = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-[#333333] mb-2 block">
-                  Price Range: ${priceRange[0]} - ${priceRange[1]}
+                  Price Range: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
                 </label>
                 <input
                   type="range"

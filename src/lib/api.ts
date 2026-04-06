@@ -77,12 +77,6 @@ export const api = {
   toggleBlockUser: (id: string) =>
     request(`/users/${id}/block`, { method: 'PUT' }),
 
-  updateUser: (id: string, body: any) =>
-    request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
-
-  deleteUser: (id: string) =>
-    request(`/users/${id}`, { method: 'DELETE' }),
-
   // Products
   getProducts: (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';

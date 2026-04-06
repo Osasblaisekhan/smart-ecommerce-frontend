@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import { useCart } from '@/contexts/CartContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -167,7 +168,7 @@ const ProductDetailPage: React.FC = () => {
               </div>
 
               <p className="text-3xl font-bold text-[#333333] mb-4">
-                CFA{(product.price / 100).toFixed(0)}
+                {formatPrice(product.price)}
               </p>
 
               <p className="text-[#666666] text-sm leading-relaxed mb-6">{product.description}</p>
@@ -199,7 +200,7 @@ const ProductDetailPage: React.FC = () => {
                 className="w-full py-4 bg-[#8BC34A] hover:bg-[#7CB342] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#8BC34A]/25"
               >
                 <ShoppingCart className="w-5 h-5" />
-                {!inStock ? 'Out of Stock' : `Add to Cart - CFA${((product.price * quantity) / 100).toFixed(0)}`}
+                {!inStock ? 'Out of Stock' : `Add to Cart - ${formatPrice(product.price * quantity)}`}
               </button>
 
               {/* Trust badges */}

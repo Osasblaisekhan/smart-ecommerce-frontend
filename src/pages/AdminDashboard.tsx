@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -125,11 +126,6 @@ const AdminDashboard: React.FC = () => {
   const [orderSearch, setOrderSearch] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
   const [showAddProduct, setShowAddProduct] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<string | null>(null);
-  const [editCustomerValues, setEditCustomerValues] = useState<any>({});
-  const [productImageFile, setProductImageFile] = useState<File | null>(null);
-  const [productImagePreview, setProductImagePreview] = useState<string>('');
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '', description: '', price: '', category: 'Smart Lighting',
     stock: '50', brand: '', vendor: '', sku: '', tags: 'featured',
@@ -208,21 +204,6 @@ const AdminDashboard: React.FC = () => {
 
   const addProduct = async () => {
     try {
-      let imageUrls = newProduct.images.split(',').map(i => i.trim()).filter(Boolean);
-      
-      if (productImageFile) {
-        setUploadingImage(true);
-        const reader = new FileReader();
-        const imageBase64 = await new Promise<string>((resolve) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(productImageFile);
-        });
-        imageUrls = [imageBase64, ...imageUrls];
-        setUploadingImage(false);
-        setProductImageFile(null);
-        setProductImagePreview('');
-      }
-
       await api.createProduct({
         name: newProduct.name,
         description: newProduct.description,
@@ -233,7 +214,7 @@ const AdminDashboard: React.FC = () => {
         vendor: newProduct.vendor,
         sku: newProduct.sku,
         tags: newProduct.tags.split(',').map(t => t.trim()).filter(Boolean),
-        images: imageUrls,
+        images: newProduct.images.split(',').map(i => i.trim()).filter(Boolean),
         compatibility: newProduct.compatibility.split(',').map(c => c.trim()).filter(Boolean),
         status: 'active',
       });
@@ -244,43 +225,12 @@ const AdminDashboard: React.FC = () => {
     } catch { toast.error('Failed to create product'); }
   };
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProductImageFile(file);
-      setProductImagePreview(URL.createObjectURL(file));
-    }
-  };
-
   const updateOrderStatus = async (id: string, status: string) => {
     try {
       await api.updateOrderStatus(id, status);
       toast.success(`Order marked as ${status}`);
       fetchAll();
     } catch { toast.error('Failed to update order'); }
-  };
-
-  const handleEditCustomer = (customer: any) => {
-    setEditingCustomer(customer._id);
-    setEditCustomerValues({ name: customer.name || '', email: customer.email || '', phone: customer.phone || '', role: customer.role || 'user' });
-  };
-
-  const handleSaveCustomer = async (id: string) => {
-    try {
-      await api.updateUser(id, editCustomerValues);
-      toast.success('Customer updated successfully');
-      setEditingCustomer(null);
-      fetchAll();
-    } catch (err: any) { toast.error(err.message || 'Failed to update customer'); }
-  };
-
-  const handleDeleteCustomer = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this customer?')) return;
-    try {
-      await api.deleteUser(id);
-      toast.success('Customer deleted successfully');
-      fetchAll();
-    } catch (err: any) { toast.error(err.message || 'Failed to delete customer'); }
   };
 
   const handleLogout = () => { localStorage.removeItem('smarthome_user'); localStorage.removeItem('smarthome_token'); setAuthed(false); };
@@ -392,7 +342,7 @@ const AdminDashboard: React.FC = () => {
                               <td className="py-2.5 px-3 font-medium text-[#333333]">#{o._id.slice(0, 8).toUpperCase()}</td>
                               <td className="py-2.5 px-3 text-[#666666]">{new Date(o.createdAt).toLocaleDateString()}</td>
                               <td className="py-2.5 px-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[o.orderStatus] || 'bg-gray-100 text-gray-600'}`}>{o.orderStatus}</span></td>
-                              <td className="py-2.5 px-3 text-right font-semibold">CFA{(o.totalPrice / 100).toFixed(0)}</td>
+                              <td className="py-2.5 px-3 text-right font-semibold">{formatPrice(o.totalPrice)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -431,7 +381,7 @@ const AdminDashboard: React.FC = () => {
                     {[
                       { key: 'name', label: 'Product Name', type: 'text', required: true },
                       { key: 'description', label: 'Description', type: 'text', required: true },
-                      { key: 'price', label: 'Price (CFA)', type: 'number', required: true },
+                      { key: 'price', label: 'Price ($)', type: 'number', required: true },
                       { key: 'category', label: 'Category', type: 'select', options: ['Smart Lighting', 'Security Cameras', 'Climate Control', 'Entertainment', 'Sensors & Safety'] },
                       { key: 'stock', label: 'Stock', type: 'number' },
                       { key: 'brand', label: 'Brand', type: 'text' },
@@ -458,26 +408,11 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  
-                  {/* Image Upload */}
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-[#333333] mb-1">Upload Product Image</label>
-                    <input type="file" accept="image/*" onChange={handleImageFileChange}
-                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#8BC34A] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#8BC34A] file:text-white hover:file:bg-[#7CB342]" />
-                    {productImagePreview && (
-                      <div className="mt-3 relative inline-block">
-                        <img src={productImagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border border-gray-200" />
-                        <button onClick={() => { setProductImageFile(null); setProductImagePreview(''); }}
-                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs">×</button>
-                      </div>
-                    )}
-                  </div>
-
                   <div className="flex gap-3 mt-6">
-                    <button onClick={addProduct} disabled={uploadingImage} className="px-6 py-2.5 bg-[#8BC34A] hover:bg-[#7CB342] text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50">
-                      {uploadingImage ? 'Uploading...' : 'Create Product'}
+                    <button onClick={addProduct} className="px-6 py-2.5 bg-[#8BC34A] hover:bg-[#7CB342] text-white font-semibold rounded-xl text-sm transition-colors">
+                      Create Product
                     </button>
-                    <button onClick={() => { setShowAddProduct(false); setProductImageFile(null); setProductImagePreview(''); }} className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl text-sm transition-colors">
+                    <button onClick={() => setShowAddProduct(false)} className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl text-sm transition-colors">
                       Cancel
                     </button>
                   </div>
@@ -517,7 +452,7 @@ const AdminDashboard: React.FC = () => {
                                 <input value={editValues.price} onChange={e => setEditValues({ ...editValues, price: e.target.value })}
                                   className="w-20 px-2 py-1 border border-[#8BC34A] rounded-lg text-sm focus:outline-none" />
                               ) : (
-                                <span className="font-semibold text-[#333333]">CFA{(p.price / 100).toFixed(0)}</span>
+                                <span className="font-semibold text-[#333333]">{formatPrice(p.price)}</span>
                               )}
                             </td>
                             <td className="py-3 px-4">
@@ -603,7 +538,7 @@ const AdminDashboard: React.FC = () => {
                               <option value="refunded">Refunded</option>
                             </select>
                           </td>
-                          <td className="py-3 px-4 text-right font-semibold text-[#333333]">CFA{((o.totalPrice || 0) / 100).toFixed(0)}</td>
+                          <td className="py-3 px-4 text-right font-semibold text-[#333333]">${((o.totalPrice || 0) / 100).toFixed(2)}</td>
                         </tr>
                       ))}
                       {filteredOrders.length === 0 && (
@@ -638,44 +573,23 @@ const AdminDashboard: React.FC = () => {
                       <th className="text-left py-3 px-4 text-xs font-semibold text-[#666666] uppercase">Role</th>
                       <th className="text-center py-3 px-4 text-xs font-semibold text-[#666666] uppercase">Orders</th>
                       <th className="text-left py-3 px-4 text-xs font-semibold text-[#666666] uppercase">Joined</th>
-                      <th className="text-center py-3 px-4 text-xs font-semibold text-[#666666] uppercase">Actions</th>
                     </tr></thead>
                     <tbody>
                       {filteredCustomers.map(c => (
                         <tr key={c._id} className="border-b border-gray-50 hover:bg-gray-50/50">
                           <td className="py-3 px-4">
-                            {editingCustomer === c._id ? (
-                              <input value={editCustomerValues.name} onChange={e => setEditCustomerValues({...editCustomerValues, name: e.target.value})}
-                                className="w-full px-2 py-1 border rounded text-sm" placeholder="Name" />
-                            ) : (
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-[#8BC34A]/10 rounded-full flex items-center justify-center text-[#8BC34A] font-bold text-xs">
-                                  {(c.name || c.email || '?')[0].toUpperCase()}
-                                </div>
-                                <span className="font-medium text-[#333333]">{c.name || '—'}</span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-[#8BC34A]/10 rounded-full flex items-center justify-center text-[#8BC34A] font-bold text-xs">
+                                {(c.name || c.email || '?')[0].toUpperCase()}
                               </div>
-                            )}
+                              <span className="font-medium text-[#333333]">{c.name || '—'}</span>
+                            </div>
                           </td>
+                          <td className="py-3 px-4 text-[#666666]">{c.email}</td>
                           <td className="py-3 px-4">
-                            {editingCustomer === c._id ? (
-                              <input value={editCustomerValues.email} onChange={e => setEditCustomerValues({...editCustomerValues, email: e.target.value})}
-                                className="w-full px-2 py-1 border rounded text-sm" placeholder="Email" />
-                            ) : (
-                              <span className="text-[#666666]">{c.email}</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            {editingCustomer === c._id ? (
-                              <select value={editCustomerValues.role} onChange={e => setEditCustomerValues({...editCustomerValues, role: e.target.value})}
-                                className="px-2 py-1 border rounded text-sm">
-                                <option value="user">User</option>
-                                <option value="admin">Admin</option>
-                              </select>
-                            ) : (
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${c.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
-                                {c.role}
-                              </span>
-                            )}
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${c.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                              {c.role}
+                            </span>
                           </td>
                           <td className="py-3 px-4 text-center">
                             <span className="inline-flex items-center justify-center w-7 h-7 bg-[#607D8B]/10 text-[#607D8B] font-bold text-xs rounded-full">
@@ -683,33 +597,10 @@ const AdminDashboard: React.FC = () => {
                             </span>
                           </td>
                           <td className="py-3 px-4 text-[#666666]">{new Date(c.createdAt).toLocaleDateString()}</td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center justify-center gap-2">
-                              {editingCustomer === c._id ? (
-                                <>
-                                  <button onClick={() => handleSaveCustomer(c._id)} className="p-1.5 bg-green-100 text-green-600 rounded hover:bg-green-200">
-                                    <Check className="w-4 h-4" />
-                                  </button>
-                                  <button onClick={() => setEditingCustomer(null)} className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button onClick={() => handleEditCustomer(c)} className="p-1.5 bg-blue-100 text-blue-600 rounded hover:bg-blue-200" title="Edit">
-                                    <Edit3 className="w-4 h-4" />
-                                  </button>
-                                  <button onClick={() => handleDeleteCustomer(c._id)} className="p-1.5 bg-red-100 text-red-600 rounded hover:bg-red-200" title="Delete">
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </td>
                         </tr>
                       ))}
                       {filteredCustomers.length === 0 && (
-                        <tr><td colSpan={6} className="py-12 text-center text-[#666666]">No customers found</td></tr>
+                        <tr><td colSpan={5} className="py-12 text-center text-[#666666]">No customers found</td></tr>
                       )}
                     </tbody>
                   </table>

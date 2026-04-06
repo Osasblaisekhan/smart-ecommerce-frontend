@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { useCart } from './CartContext';
 
 interface User {
   _id: string;
@@ -16,7 +15,6 @@ interface AuthContextType {
   signUp: (email: string, password: string, name?: string) => Promise<{ error?: string }>;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
-  navigate: (path: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,7 +23,6 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => ({}),
   signIn: async () => ({}),
   signOut: async () => {},
-  navigate: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -33,8 +30,6 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { clearCart } = useCart();
-  const [navigateFn, setNavigateFn] = useState<((path: string) => void) | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('smarthome_user');
@@ -44,21 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch {}
     }
     setLoading(false);
-  }, []);
-
-  const navigate = useCallback((path: string) => {
-    if (navigateFn) {
-      navigateFn(path);
-    }
-  }, [navigateFn]);
-
-  // Expose navigate function via custom event
-  useEffect(() => {
-    const handleNavigate = (e: CustomEvent) => {
-      window.location.href = e.detail;
-    };
-    window.addEventListener('auth-navigate' as any, handleNavigate);
-    return () => window.removeEventListener('auth-navigate' as any, handleNavigate);
   }, []);
 
   const signUp = async (email: string, password: string, name?: string) => {
@@ -95,12 +75,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('smarthome_user');
     localStorage.removeItem('smarthome_token');
-    clearCart();
-    window.dispatchEvent(new CustomEvent('auth-navigate', { detail: '/' }));
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, navigate }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

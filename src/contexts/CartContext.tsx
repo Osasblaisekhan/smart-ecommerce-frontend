@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from './AuthContext';
 
 export interface CartItem {
   product_id: string;
@@ -35,45 +34,21 @@ const CartContext = createContext<CartContextType>({
 
 export const useCart = () => useContext(CartContext);
 
-const getCartKey = (userId: string) => `ecom_cart_${userId}`;
-
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
   const [cart, setCart] = useState<CartItem[]>(() => {
-    if (!user?._id) return [];
     try {
-      const stored = localStorage.getItem(getCartKey(user._id));
+      const stored = localStorage.getItem('ecom_cart');
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
     }
   });
 
-  // Load cart when user changes
   useEffect(() => {
-    if (user?._id) {
-      try {
-        const stored = localStorage.getItem(getCartKey(user._id));
-        setCart(stored ? JSON.parse(stored) : []);
-      } catch {
-        setCart([]);
-      }
-    } else {
-      setCart([]);
-    }
-  }, [user?._id]);
-
-  useEffect(() => {
-    if (user?._id) {
-      localStorage.setItem(getCartKey(user._id), JSON.stringify(cart));
-    }
-  }, [cart, user?._id]);
+    localStorage.setItem('ecom_cart', JSON.stringify(cart));
+  }, [cart]);
 
   const addToCart = useCallback((item: Omit<CartItem, 'quantity'>, quantity = 1) => {
-    if (!user?._id) {
-      toast.error('Please sign in to add items to cart');
-      return;
-    }
     setCart(prev => {
       const existingIndex = prev.findIndex(
         i => i.product_id === item.product_id && i.variant_id === item.variant_id
@@ -89,7 +64,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [...prev, { ...item, quantity }];
     });
     toast.success(`${item.name} added to cart`);
-  }, [user?._id]);
+  }, []);
 
   const removeFromCart = useCallback((productId: string, variantId?: string) => {
     setCart(prev => prev.filter(
@@ -112,10 +87,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearCart = useCallback(() => {
     setCart([]);
-    if (user?._id) {
-      localStorage.removeItem(getCartKey(user._id));
-    }
-  }, [user?._id]);
+    localStorage.removeItem('ecom_cart');
+  }, []);
 
   const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0);
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
+import { formatPrice } from '@/lib/currency';
 import { ShoppingCart, Star, Zap } from 'lucide-react';
 
 interface ProductCardProps {
@@ -90,7 +91,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact }) => {
         </h3>
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-[#333333]">
-            CFA{(price / 100).toFixed(0)}
+            {formatPrice(price)}
           </span>
           <div className="flex items-center gap-0.5">
             {[1,2,3,4,5].map(i => (

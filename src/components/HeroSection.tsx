@@ -8,7 +8,7 @@ const HeroSection: React.FC = () => {
       {/* Background */}
       <div className="absolute inset-0">
         <img
-          src="https://d64gsuwffb70l.cloudfront.net/69c69fbacd39486e3b7ae564_1774624937465_ead18769.jpg"
+          src="/home.jfif"
           alt="Smart Home"
           className="w-full h-full object-cover"
         />

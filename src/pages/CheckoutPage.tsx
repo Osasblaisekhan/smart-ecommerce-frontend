@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { Lock, ArrowLeft, Truck, CreditCard, Clock, Package } from 'lucide-react';
+import { Lock, ArrowLeft, Truck, CreditCard } from 'lucide-react';
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,41 +23,6 @@ const CheckoutPage: React.FC = () => {
     zip: '',
     country: 'US',
   });
-
-  // Show coming soon if not logged in
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#F5F5F5]">
-        <Header />
-        <main className="pt-[88px]">
-          <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-            <div className="bg-white rounded-3xl border border-gray-100 p-12">
-              <div className="w-20 h-20 bg-[#8BC34A]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Clock className="w-10 h-10 text-[#8BC34A]" />
-              </div>
-              <h1 className="text-3xl font-bold text-[#333333] mb-4">Checkout Coming Soon!</h1>
-              <p className="text-[#666666] text-lg mb-8">
-                We are working hard to bring you a seamless checkout experience. 
-                This feature will be available shortly.
-              </p>
-              <div className="flex items-center justify-center gap-2 text-[#8BC34A] font-semibold mb-8">
-                <Package className="w-5 h-5" />
-                <span>Stay tuned for updates!</span>
-              </div>
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#8BC34A] text-white font-semibold rounded-xl hover:bg-[#7CB342] transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Home
-              </Link>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
   useEffect(() => {
     if (cart.length === 0) navigate('/cart');
@@ -248,7 +213,7 @@ const CheckoutPage: React.FC = () => {
                     className="w-full py-4 bg-[#8BC34A] hover:bg-[#7CB342] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-[#8BC34A]/25"
                   >
                     <Lock className="w-4 h-4" />
-                    {loading ? 'Processing...' : `Place Order - CFA${(total / 100).toFixed(0)}`}
+                    {loading ? 'Processing...' : `Place Order - ${formatPrice(total)}`}
                   </button>
                 </div>
               )}
@@ -269,7 +234,7 @@ const CheckoutPage: React.FC = () => {
                         {item.variant_title && <p className="text-xs text-[#666666]">{item.variant_title}</p>}
                         <p className="text-xs text-[#666666]">Qty: {item.quantity}</p>
                       </div>
-                      <p className="text-sm font-semibold text-[#333333]">CFA{((item.price * item.quantity) / 100).toFixed(0)}</p>
+                      <p className="text-sm font-semibold text-[#333333]">{formatPrice(item.price * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
@@ -277,7 +242,7 @@ const CheckoutPage: React.FC = () => {
                 <div className="border-t border-gray-100 pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-[#666666]">Subtotal</span>
-                    <span className="font-medium">CFA{(cartTotal / 100).toFixed(0)}</span>
+                    <span className="font-medium">{formatPrice(cartTotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-[#666666]">Shipping</span>
@@ -285,7 +250,7 @@ const CheckoutPage: React.FC = () => {
                   </div>
                   <div className="border-t border-gray-100 pt-3 flex justify-between">
                     <span className="font-bold text-[#333333]">Total</span>
-                    <span className="font-bold text-xl text-[#333333]">CFA{(total / 100).toFixed(0)}</span>
+                    <span className="font-bold text-xl text-[#333333]">{formatPrice(total)}</span>
                   </div>
                 </div>
               </div>

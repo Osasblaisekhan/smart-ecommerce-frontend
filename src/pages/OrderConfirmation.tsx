@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { CheckCircle, Package, ArrowRight, Truck } from 'lucide-react';
@@ -86,7 +87,7 @@ const OrderConfirmation: React.FC = () => {
                         )}
                         <p className="text-xs text-[#666666]">Qty: {item.quantity}</p>
                       </div>
-                      <p className="text-sm font-semibold text-[#333333]">CFA{(item.total / 100).toFixed(0)}</p>
+                      <p className="text-sm font-semibold text-[#333333]">{formatPrice(item.total)}</p>
                     </div>
                   ))}
                 </div>
@@ -97,19 +98,19 @@ const OrderConfirmation: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-[#666666]">Subtotal</span>
-                    <span> CFA{(order.subtotal / 100).toFixed(0)}</span>
+                    <span>{formatPrice(order.subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-[#666666]">Shipping</span>
-                    <span className="text-[#8BC34A]">{order.shipping === 0 ? 'Free' : `CFA${(order.shipping / 100).toFixed(0)}`}</span>
+                    <span className="text-[#8BC34A]">{order.shipping === 0 ? 'Free' : formatPrice(order.shipping)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-[#666666]">Tax</span>
-                    <span>CFA{((order.tax || 0) / 100).toFixed(0)}</span>
+                    <span>{formatPrice(order.tax || 0)}</span>
                   </div>
                   <div className="border-t border-gray-200 pt-2 flex justify-between">
                     <span className="font-bold text-[#333333]">Total</span>
-                    <span className="font-bold text-lg text-[#333333]">CFA{(order.totalPrice / 100).toFixed(0)}</span>
+                    <span className="font-bold text-lg text-[#333333]">{formatPrice(order.totalPrice)}</span>
                   </div>
                 </div>
               </div>
